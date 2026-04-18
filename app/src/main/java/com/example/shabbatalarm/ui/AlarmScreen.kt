@@ -1,9 +1,12 @@
 package com.example.shabbatalarm.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,10 +19,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
@@ -34,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -62,6 +71,10 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
     )
 
     var scheduledLabel by rememberSaveable { mutableStateOf<String?>(null) }
+    var showShabbatTimes by rememberSaveable { mutableStateOf(false) }
+    var durationSeconds by rememberSaveable { mutableStateOf(repository.getDurationSeconds()) }
+    var isBatteryOptimized by rememberSaveable { mutableStateOf(false) }
+    var repeatWeekly by rememberSaveable { mutableStateOf(repository.getRepeatWeekly()) }
 
     val exactAlarmSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -70,6 +83,13 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { /* no-op */ }
+
+    val batterySettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        // After user returns from the battery-optimization dialog, re-check on next resume.
+        isBatteryOptimized = !isIgnoringBatteryOptimizations(context)
+    }
 
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -94,6 +114,7 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                     if (scheduled != null) repository.clear()
                     null
                 }
+                isBatteryOptimized = !isIgnoringBatteryOptimizations(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -103,23 +124,91 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+            .padding(horizontal = 24.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
     ) {
-        Text(
-            text = "Shabbat Alarm",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.SemiBold
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = { showShabbatTimes = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Shabbat times",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (isBatteryOptimized) {
+            BatteryOptimizationCard(
+                onFixClick = {
+                    batterySettingsLauncher.launch(
+                        buildIgnoreBatteryOptIntent(context.packageName)
+                    )
+                }
+            )
+        }
+
+        AnimatedCandle(
+            isLit = scheduledLabel != null,
+            modifier = Modifier.size(width = 140.dp, height = 120.dp)
         )
 
         Text(
-            text = "Pick a time. The alarm fires once and plays for 15 seconds.",
+            text = "Shabbat Alarm",
+            style = MaterialTheme.typography.headlineLarge
+        )
+
+        Text(
+            text = "Pick a time and duration. The alarm fires once.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         TimePicker(state = timePickerState)
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Alarm duration: $durationSeconds seconds",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Slider(
+                value = durationSeconds.toFloat(),
+                onValueChange = { durationSeconds = it.toInt() },
+                onValueChangeFinished = { repository.setDurationSeconds(durationSeconds) },
+                valueRange = AlarmRepository.MIN_DURATION_SECONDS.toFloat()
+                        ..AlarmRepository.MAX_DURATION_SECONDS.toFloat(),
+                steps = ((AlarmRepository.MAX_DURATION_SECONDS
+                        - AlarmRepository.MIN_DURATION_SECONDS)
+                        / AlarmRepository.DURATION_STEP_SECONDS) - 1,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Repeat every week",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = repeatWeekly,
+                onCheckedChange = {
+                    repeatWeekly = it
+                    repository.setRepeatWeekly(it)
+                }
+            )
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -173,7 +262,11 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = scheduledLabel?.let { "Alarm set for $it" } ?: "No alarm set",
+            text = when {
+                scheduledLabel == null -> "No alarm set"
+                repeatWeekly -> "Alarm set for $scheduledLabel · weekly"
+                else -> "Alarm set for $scheduledLabel"
+            },
             style = MaterialTheme.typography.bodyLarge,
             color = if (scheduledLabel != null)
                 MaterialTheme.colorScheme.primary
@@ -181,7 +274,21 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                 MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+
+    if (showShabbatTimes) {
+        ShabbatTimesDialog(onDismiss = { showShabbatTimes = false })
+    }
 }
+
+private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    return pm.isIgnoringBatteryOptimizations(context.packageName)
+}
+
+private fun buildIgnoreBatteryOptIntent(packageName: String): Intent =
+    Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+        data = Uri.parse("package:$packageName")
+    }
 
 private fun formatTriggerTime(triggerAtMillis: Long): String {
     val target = Calendar.getInstance().apply { timeInMillis = triggerAtMillis }

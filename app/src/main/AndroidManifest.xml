@@ -18,6 +18,9 @@
     <!-- Re-arm alarm after reboot (used later in stage 8) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Request exemption from Doze/Battery Optimization for reliable alarm delivery -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:name=".ShabbatAlarmApp"
         android:allowBackup="true"

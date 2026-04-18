@@ -26,11 +26,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Foreground service that plays the alarm tone on the ALARM audio stream for
- * [PLAYBACK_DURATION_MS] and then stops itself.
+ * Foreground service that plays the alarm tone on the ALARM audio stream for the
+ * user-configured duration (5–60 seconds, persisted in [AlarmRepository]) and then
+ * stops itself.
  *
- * The 15-second auto-stop is driven by a Coroutine on the main dispatcher, scoped
- * to the service lifecycle and cancelled in onDestroy.
+ * The auto-stop is driven by a Coroutine on the main dispatcher, scoped to the
+ * service lifecycle and cancelled in onDestroy.
  */
 class AlarmService : Service() {
 
@@ -68,8 +69,12 @@ class AlarmService : Service() {
         autoStopJob?.cancel()
         serviceScope.cancel()
         releasePlayer()
-        // The one-shot alarm has fired; clear the persisted pending-alarm record.
-        AlarmRepository(this).clear()
+        // Only clear the pending record if the alarm was a one-shot. For weekly
+        // repeats the receiver has already updated it to next week's trigger.
+        val repo = AlarmRepository(this)
+        if (!repo.getRepeatWeekly()) {
+            repo.clear()
+        }
         AlarmWakeLock.release()
         Log.d(TAG, "AlarmService onDestroy")
         super.onDestroy()
@@ -97,8 +102,11 @@ class AlarmService : Service() {
             try {
                 setDataSource(this@AlarmService, toneUri)
                 prepare()
+                // Start quietly; the fade-in coroutine ramps up to full volume.
+                setVolume(FADE_START_VOLUME, FADE_START_VOLUME)
                 start()
-                Log.d(TAG, "Playback started on ALARM stream")
+                Log.d(TAG, "Playback started on ALARM stream (fade-in enabled)")
+                scheduleFadeIn()
             } catch (t: Throwable) {
                 Log.e(TAG, "Failed to start playback", t)
                 stopSelf()
@@ -107,10 +115,35 @@ class AlarmService : Service() {
     }
 
     private fun scheduleAutoStop() {
+        val durationSeconds = AlarmRepository(this).getDurationSeconds()
+        val durationMs = durationSeconds * 1_000L
         autoStopJob = serviceScope.launch {
-            delay(PLAYBACK_DURATION_MS)
-            Log.d(TAG, "15s elapsed — stopping service")
+            delay(durationMs)
+            Log.d(TAG, "${durationSeconds}s elapsed — stopping service")
             stopSelf()
+        }
+    }
+
+    /**
+     * Ramps MediaPlayer volume from [FADE_START_VOLUME] up to 1.0 over a short window.
+     * For very short alarms (<6s) we skip the fade-in and play at full volume from the start.
+     */
+    private fun scheduleFadeIn() {
+        val durationMs = AlarmRepository(this).getDurationSeconds() * 1_000L
+        if (durationMs < 6_000L) {
+            mediaPlayer?.setVolume(1f, 1f)
+            return
+        }
+        val fadeInMs = minOf(MAX_FADE_IN_MS, (durationMs * 0.3).toLong())
+        val steps = 20
+        val stepDelay = fadeInMs / steps
+        serviceScope.launch {
+            for (i in 1..steps) {
+                val progress = i.toFloat() / steps
+                val volume = FADE_START_VOLUME + (1f - FADE_START_VOLUME) * progress
+                mediaPlayer?.setVolume(volume, volume)
+                delay(stepDelay)
+            }
         }
     }
 
@@ -144,6 +177,7 @@ class AlarmService : Service() {
     companion object {
         private const val TAG = "AlarmService"
         private const val NOTIFICATION_ID = 1001
-        private const val PLAYBACK_DURATION_MS = 15_000L
+        private const val FADE_START_VOLUME = 0.2f
+        private const val MAX_FADE_IN_MS = 3_000L
     }
 }

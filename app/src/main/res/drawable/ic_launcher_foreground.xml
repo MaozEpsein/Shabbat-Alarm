@@ -4,7 +4,47 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Glow halo behind the flame -->
+    <path
+        android:fillColor="#FFD54F"
+        android:fillAlpha="0.22"
+        android:pathData="M54,48 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0" />
+
+    <!-- Flame outer (amber) -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M54,26 C46,38 42,46 42,52 C42,58 47,64 54,64 C61,64 66,58 66,52 C66,46 62,38 54,26 Z" />
+
+    <!-- Flame inner (deep orange) -->
+    <path
+        android:fillColor="#FF6F00"
+        android:pathData="M54,36 C50,42 48,48 48,51 C48,55 50,58 54,58 C58,58 60,55 60,51 C60,48 58,42 54,36 Z" />
+
+    <!-- Bright tip -->
+    <path
+        android:fillColor="#FFF59D"
+        android:pathData="M54,42 C52,46 52,50 54,50 C56,50 56,46 54,42 Z" />
+
+    <!-- Wick -->
+    <path
+        android:fillColor="#3E2723"
+        android:pathData="M52.5,64 L55.5,64 L55.5,70 L52.5,70 Z" />
+
+    <!-- Candle body -->
+    <path
+        android:fillColor="#FFF8E7"
+        android:pathData="M44,70 L64,70 L64,88 L44,88 L44,70 Z" />
+
+    <!-- Candle body shadow (right edge) -->
+    <path
+        android:fillColor="#E8D5A6"
+        android:pathData="M60,70 L64,70 L64,88 L60,88 Z" />
+
+    <!-- Candle body highlight (left edge) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,30 C48,30 44,34 44,40 L44,62 L40,62 L40,68 L68,68 L68,62 L64,62 L64,40 C64,34 60,30 54,30 Z M52,72 L56,72 L56,78 L52,78 Z" />
+        android:fillAlpha="0.55"
+        android:pathData="M45,71 L47,71 L47,87 L45,87 Z" />
+
 </vector>
