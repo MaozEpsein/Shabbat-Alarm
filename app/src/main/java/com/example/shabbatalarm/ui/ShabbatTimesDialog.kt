@@ -19,9 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.shabbatalarm.R
 import com.example.shabbatalarm.alarm.ShabbatTimesCalculator
 
 @Composable
@@ -39,7 +41,7 @@ fun ShabbatTimesDialog(onDismiss: () -> Unit) {
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
-                    text = "Shabbat Times",
+                    text = stringResource(R.string.shabbat_times_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -63,21 +65,21 @@ fun ShabbatTimesDialog(onDismiss: () -> Unit) {
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = "City",
+                        text = stringResource(R.string.shabbat_times_column_city),
                         modifier = Modifier.weight(1.4f),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Entry",
+                        text = stringResource(R.string.shabbat_times_column_entry),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Exit",
+                        text = stringResource(R.string.shabbat_times_column_exit),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -132,7 +134,7 @@ fun ShabbatTimesDialog(onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Entry = candle lighting.  Exit = Havdalah (stars out, ~8.5° below horizon).",
+                    text = stringResource(R.string.shabbat_times_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -144,7 +146,7 @@ fun ShabbatTimesDialog(onDismiss: () -> Unit) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Close")
+                        Text(stringResource(R.string.close))
                     }
                 }
             }

@@ -30,8 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
@@ -46,7 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.shabbatalarm.R
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -78,8 +78,11 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
     var durationSeconds by rememberSaveable { mutableStateOf(repository.getDurationSeconds()) }
     var isBatteryOptimized by rememberSaveable { mutableStateOf(false) }
     var repeatWeekly by rememberSaveable { mutableStateOf(repository.getRepeatWeekly()) }
-    var timeInputMode by rememberSaveable { mutableStateOf(false) }
     var alarmToneUri by rememberSaveable { mutableStateOf(repository.getAlarmToneUri()) }
+
+    // Pre-load strings that are referenced from non-composable lambdas.
+    val tomorrowSuffix = stringResource(R.string.tomorrow_suffix)
+    val allowExactAlarmToast = stringResource(R.string.allow_exact_alarm_toast)
 
     val exactAlarmSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -114,7 +117,7 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
             if (event == Lifecycle.Event.ON_RESUME) {
                 val scheduled = repository.getScheduled()
                 scheduledLabel = if (scheduled != null && scheduled > System.currentTimeMillis()) {
-                    formatTriggerTime(scheduled)
+                    formatTriggerTime(scheduled, tomorrowSuffix)
                 } else {
                     if (scheduled != null) repository.clear()
                     null
@@ -140,14 +143,14 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
             IconButton(onClick = { showShabbatTimes = true }) {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "Shabbat times",
+                    contentDescription = stringResource(R.string.cd_shabbat_times),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
             IconButton(onClick = { showSettings = true }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(R.string.cd_settings),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -169,12 +172,12 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
         )
 
         Text(
-            text = "Shabbat Alarm",
+            text = stringResource(R.string.screen_title),
             style = MaterialTheme.typography.headlineLarge
         )
 
         Text(
-            text = "Pick a time and duration. The alarm fires once.",
+            text = stringResource(R.string.screen_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -186,23 +189,7 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
             timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSecondaryContainer
         )
 
-        if (timeInputMode) {
-            TimeInput(state = timePickerState, colors = timePickerColors)
-        } else {
-            TimePicker(state = timePickerState, colors = timePickerColors)
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(onClick = { timeInputMode = !timeInputMode }) {
-                Text(
-                    text = if (timeInputMode) "Use dial" else "Type time",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
+        TimePicker(state = timePickerState, colors = timePickerColors)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -216,13 +203,9 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                             timePickerState.minute
                         )
                         repository.setScheduled(triggerAt)
-                        scheduledLabel = formatTriggerTime(triggerAt)
+                        scheduledLabel = formatTriggerTime(triggerAt, tomorrowSuffix)
                     } else {
-                        Toast.makeText(
-                            context,
-                            "Please allow exact alarms for Shabbat Alarm.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        Toast.makeText(context, allowExactAlarmToast, Toast.LENGTH_LONG).show()
                         exactAlarmSettingsLauncher.launch(
                             Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                         )
@@ -231,7 +214,7 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Set Alarm",
+                    text = stringResource(R.string.set_alarm),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -246,7 +229,7 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = stringResource(R.string.cancel),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -257,9 +240,9 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
 
         Text(
             text = when {
-                scheduledLabel == null -> "No alarm set"
-                repeatWeekly -> "Alarm set for $scheduledLabel · weekly"
-                else -> "Alarm set for $scheduledLabel"
+                scheduledLabel == null -> stringResource(R.string.no_alarm_set)
+                repeatWeekly -> stringResource(R.string.alarm_set_for_weekly, scheduledLabel!!)
+                else -> stringResource(R.string.alarm_set_for, scheduledLabel!!)
             },
             style = MaterialTheme.typography.bodyLarge,
             color = if (scheduledLabel != null)
@@ -305,12 +288,12 @@ private fun buildIgnoreBatteryOptIntent(packageName: String): Intent =
         data = Uri.parse("package:$packageName")
     }
 
-private fun formatTriggerTime(triggerAtMillis: Long): String {
+private fun formatTriggerTime(triggerAtMillis: Long, tomorrowSuffix: String): String {
     val target = Calendar.getInstance().apply { timeInMillis = triggerAtMillis }
     val today = Calendar.getInstance()
     val isTomorrow = target.get(Calendar.DAY_OF_YEAR) != today.get(Calendar.DAY_OF_YEAR) ||
             target.get(Calendar.YEAR) != today.get(Calendar.YEAR)
 
     val time = SimpleDateFormat("HH:mm", Locale.US).format(Date(triggerAtMillis))
-    return if (isTomorrow) "$time (tomorrow)" else time
+    return if (isTomorrow) "$time ($tomorrowSuffix)" else time
 }

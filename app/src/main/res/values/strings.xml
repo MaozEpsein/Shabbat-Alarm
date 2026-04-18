@@ -1,4 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Shabbat Alarm</string>
+    <!-- App identity -->
+    <string name="app_name">שעון מעורר - לשבת</string>
+
+    <!-- Main screen -->
+    <string name="screen_title">שעון מעורר - לשבת</string>
+    <string name="screen_subtitle">בחר שעה, השעון מעורר יופעל פעם אחת</string>
+    <string name="set_alarm">קבע שעון מעורר</string>
+    <string name="cancel">בטל</string>
+    <string name="close">סגור</string>
+    <string name="back">חזור</string>
+    <string name="ok">אישור</string>
+
+    <!-- Alarm status -->
+    <string name="no_alarm_set">לא הוגדר שעון מעורר</string>
+    <string name="alarm_set_for">הוגדר שעון מעורר ל-%1$s</string>
+    <string name="alarm_set_for_weekly">הוגדר שעון מעורר ל-%1$s · שבועי</string>
+    <string name="tomorrow_suffix">מחר</string>
+    <string name="allow_exact_alarm_toast">אנא אפשר שעונים מעוררים מדויקים עבור האפליקציה</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_shabbat_times">זמני שבת</string>
+    <string name="cd_settings">הגדרות</string>
+    <string name="cd_back">חזור</string>
+
+    <!-- Battery optimization warning -->
+    <string name="battery_warning_title">⚠  השעון המעורר עלול לא להישמע</string>
+    <string name="battery_warning_body">אופטימיזציית הסוללה פעילה עבור האפליקציה — זה עלול לעכב או לחסום שעונים מעוררים. לחץ למטה לתיקון.</string>
+    <string name="battery_fix_now">תקן עכשיו</string>
+
+    <!-- Shabbat times dialog -->
+    <string name="shabbat_times_title">זמני שבת</string>
+    <string name="shabbat_times_column_city">עיר</string>
+    <string name="shabbat_times_column_entry">כניסה</string>
+    <string name="shabbat_times_column_exit">יציאה</string>
+    <string name="shabbat_times_note">כניסה = הדלקת נרות. יציאה = צאת שבת (צאת הכוכבים, כ-8.5° מתחת לאופק).</string>
+
+    <!-- Settings dialog -->
+    <string name="settings_title">הגדרות</string>
+    <string name="settings_alarm_sound">צליל שעון מעורר</string>
+    <string name="settings_alarm_sound_default">ברירת מחדל של המערכת</string>
+    <string name="settings_alarm_sound_hint">הקש על צליל לתצוגה מקדימה של 5 שניות ולבחירתו.</string>
+    <string name="settings_duration">אורך שעון מעורר: %1$d שניות</string>
+    <string name="settings_repeat_weekly">חזור כל שבוע</string>
+    <string name="settings_repeat_weekly_desc">השעון המעורר יופעל שוב באותה שעה בשבוע הבא.</string>
+
+    <!-- Foreground notification -->
+    <string name="notification_title">שעון מעורר - לשבת</string>
+    <string name="notification_text">השעון המעורר פועל…</string>
+    <string name="notification_channel_name">שעון מעורר - לשבת</string>
+    <string name="notification_channel_description">משמיע את צליל השעון המעורר של השבת</string>
 </resources>

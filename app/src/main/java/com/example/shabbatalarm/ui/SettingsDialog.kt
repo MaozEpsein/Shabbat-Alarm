@@ -37,9 +37,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.shabbatalarm.R
 import com.example.shabbatalarm.alarm.AlarmRepository
 import com.example.shabbatalarm.alarm.AlarmTone
 import com.example.shabbatalarm.alarm.AlarmTones
@@ -61,9 +63,10 @@ fun SettingsDialog(
 
     var showAlarmSoundPicker by rememberSaveable { mutableStateOf(false) }
 
+    val systemDefaultLabel = stringResource(R.string.settings_alarm_sound_default)
     val effectiveSelectedUri = currentToneUri ?: tones.firstOrNull()?.uri?.toString()
     val currentToneTitle = tones.firstOrNull { it.uri.toString() == effectiveSelectedUri }
-        ?.title ?: "System default"
+        ?.title ?: systemDefaultLabel
 
     DisposableEffect(Unit) {
         onDispose { preview.release() }
@@ -124,7 +127,7 @@ private fun MainSettingsView(
     onDismiss: () -> Unit
 ) {
     Text(
-        text = "Settings",
+        text = stringResource(R.string.settings_title),
         style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.primary
     )
@@ -141,7 +144,7 @@ private fun MainSettingsView(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Alarm sound",
+                text = stringResource(R.string.settings_alarm_sound),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
@@ -165,7 +168,7 @@ private fun MainSettingsView(
 
     // ── Alarm duration ─────────────────────────────────────────────────────
     Text(
-        text = "Alarm duration: $currentDurationSeconds seconds",
+        text = stringResource(R.string.settings_duration, currentDurationSeconds),
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onSurface
     )
@@ -189,12 +192,12 @@ private fun MainSettingsView(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Repeat every week",
+                text = stringResource(R.string.settings_repeat_weekly),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Fires again at the same time next week.",
+                text = stringResource(R.string.settings_repeat_weekly_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -209,7 +212,7 @@ private fun MainSettingsView(
         horizontalArrangement = Arrangement.End
     ) {
         TextButton(onClick = onDismiss) {
-            Text("Close")
+            Text(stringResource(R.string.close))
         }
     }
 }
@@ -226,13 +229,13 @@ private fun AlarmSoundPickerView(
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.cd_back),
                 tint = MaterialTheme.colorScheme.primary
             )
         }
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = "Alarm sound",
+            text = stringResource(R.string.settings_alarm_sound),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
         )
@@ -240,7 +243,7 @@ private fun AlarmSoundPickerView(
 
     Spacer(modifier = Modifier.height(8.dp))
     Text(
-        text = "Tap a tone to preview for 5 seconds and select it.",
+        text = stringResource(R.string.settings_alarm_sound_hint),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -267,7 +270,7 @@ private fun AlarmSoundPickerView(
         horizontalArrangement = Arrangement.End
     ) {
         TextButton(onClick = onDismiss) {
-            Text("Close")
+            Text(stringResource(R.string.close))
         }
     }
 }

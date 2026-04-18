@@ -14,10 +14,10 @@ class ShabbatAlarmApp : Application() {
     private fun createAlarmChannel() {
         val channel = NotificationChannel(
             ALARM_CHANNEL_ID,
-            "Shabbat Alarm",
+            getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Plays the Shabbat alarm tone"
+            description = getString(R.string.notification_channel_description)
             setSound(null, null) // we play audio ourselves via MediaPlayer on the ALARM stream
             enableVibration(false)
         }

@@ -166,8 +166,8 @@ class AlarmService : Service() {
         )
 
         return NotificationCompat.Builder(this, ShabbatAlarmApp.ALARM_CHANNEL_ID)
-            .setContentTitle("Shabbat Alarm")
-            .setContentText("Alarm ringing…")
+            .setContentTitle(getString(R.string.notification_title))
+            .setContentText(getString(R.string.notification_text))
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)

@@ -15,8 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.shabbatalarm.R
 
 /**
  * Warning banner shown when the system has Battery Optimization enabled for this app.
@@ -37,15 +39,14 @@ fun BatteryOptimizationCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "⚠  Alarm may not fire reliably",
+                text = stringResource(R.string.battery_warning_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Battery optimization is enabled for Shabbat Alarm. " +
-                        "This can delay or block alarms. Tap below to fix.",
+                text = stringResource(R.string.battery_warning_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
@@ -61,7 +62,7 @@ fun BatteryOptimizationCard(
                     )
                 ) {
                     Text(
-                        text = "Fix now",
+                        text = stringResource(R.string.battery_fix_now),
                         fontWeight = FontWeight.Medium
                     )
                 }

@@ -2,6 +2,8 @@ package com.example.shabbatalarm.alarm
 
 import android.util.Log
 import com.kosherjava.zmanim.ComplexZmanimCalendar
+import com.kosherjava.zmanim.hebrewcalendar.HebrewDateFormatter
+import com.kosherjava.zmanim.hebrewcalendar.JewishCalendar
 import com.kosherjava.zmanim.util.GeoLocation
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -130,10 +132,28 @@ object ShabbatTimesCalculator {
         val fridayDate: Date,
         val times: List<ShabbatTimes>
     ) {
+        /**
+         * Returns a combined Gregorian + Hebrew date string, e.g.
+         * "יום שישי, 25 באפריל · י״א באייר התשפ״ו".
+         */
         fun formatFridayDate(): String {
-            val formatter = SimpleDateFormat("EEEE, MMM d", Locale.US)
+            val gregorian = formatGregorian()
+            val hebrew = formatHebrew()
+            return if (hebrew.isNotBlank()) "$gregorian · $hebrew" else gregorian
+        }
+
+        private fun formatGregorian(): String {
+            val formatter = SimpleDateFormat("EEEE, d בMMMM", Locale("iw", "IL"))
             formatter.timeZone = TIMEZONE
             return formatter.format(fridayDate)
+        }
+
+        private fun formatHebrew(): String = try {
+            val jewishCal = JewishCalendar(fridayDate)
+            HebrewDateFormatter().apply { isHebrewFormat = true }.format(jewishCal)
+        } catch (t: Throwable) {
+            Log.e("ShabbatTimes", "Failed to format Hebrew date", t)
+            ""
         }
     }
 }
