@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Deep Shabbat-evening navy with a subtle warm glow toward the candle area -->
+    <path android:pathData="M0,0 L108,0 L108,108 L0,108 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="54"
+                android:centerY="45"
+                android:gradientRadius="75"
+                android:type="radial">
+                <item android:offset="0.0" android:color="#4A5E85" />
+                <item android:offset="0.6" android:color="#2B3D5B" />
+                <item android:offset="1.0" android:color="#1A2A44" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

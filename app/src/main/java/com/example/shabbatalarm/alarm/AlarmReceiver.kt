@@ -8,23 +8,28 @@ import androidx.core.content.ContextCompat
 import java.util.Calendar
 
 class AlarmReceiver : BroadcastReceiver() {
+
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "Alarm fired at ${System.currentTimeMillis()} — acquiring wake lock")
-        // Hold the CPU awake across the hand-off to the service and through
-        // the playback window. The service releases it in onDestroy.
+        val alarmId = intent.getIntExtra(AlarmScheduler.EXTRA_ALARM_ID, -1)
+        Log.d(TAG, "Alarm fired (id=$alarmId) at ${System.currentTimeMillis()}")
+
+        // Wake the CPU through the hand-off to the service and playback window.
         AlarmWakeLock.acquire(context)
 
-        // Weekly repeat: re-arm for +7 days BEFORE starting the service so the
-        // next occurrence is scheduled even if the service/device has issues.
         val repo = AlarmRepository(context)
-        if (repo.getRepeatWeekly()) {
-            val currentTrigger = repo.getScheduled()
-            if (currentTrigger != null) {
-                val nextTrigger = advanceByOneWeek(currentTrigger)
-                AlarmScheduler(context).scheduleAt(nextTrigger)
-                repo.setScheduled(nextTrigger)
-                Log.d(TAG, "Weekly repeat enabled — rescheduled for $nextTrigger")
-            }
+        val alarm = repo.getAlarms().firstOrNull { it.id == alarmId }
+
+        if (alarm != null && alarm.repeatWeekly) {
+            // Re-arm for the same time next week before starting the service so
+            // the next occurrence is scheduled even if the service fails to start.
+            val nextTrigger = advanceByOneWeek(alarm.triggerMillis)
+            val rescheduled = alarm.copy(triggerMillis = nextTrigger)
+            repo.upsertAlarm(rescheduled)
+            AlarmScheduler(context).schedule(rescheduled)
+            Log.d(TAG, "Weekly reschedule (id=$alarmId) for $nextTrigger")
+        } else if (alarm != null) {
+            // One-shot: remove from the persisted list; the service just plays.
+            repo.removeAlarm(alarm.id)
         }
 
         val serviceIntent = Intent(context, AlarmService::class.java)

@@ -45,8 +45,6 @@ import com.example.shabbatalarm.R
 import com.example.shabbatalarm.alarm.AlarmRepository
 import com.example.shabbatalarm.alarm.AlarmTone
 import com.example.shabbatalarm.alarm.AlarmTones
-import com.example.shabbatalarm.alarm.IsraeliCity
-import com.example.shabbatalarm.alarm.ShabbatTimesCalculator
 
 private enum class SettingsSubView { MAIN, SOUND, REMINDER }
 
@@ -76,9 +74,6 @@ fun SettingsDialog(
     val effectiveSelectedUri = currentToneUri ?: tones.firstOrNull()?.uri?.toString()
     val currentToneTitle = tones.firstOrNull { it.uri.toString() == effectiveSelectedUri }
         ?.title ?: systemDefaultLabel
-
-    val cities = remember { ShabbatTimesCalculator.CITIES }
-    val safeCityIndex = defaultCityIndex.coerceIn(0, cities.lastIndex)
 
     DisposableEffect(Unit) {
         onDispose { preview.release() }

@@ -30,6 +30,15 @@ data class ShabbatTimes(
     val havdalah: String        // "HH:mm"
 )
 
+/**
+ * Info about an upcoming Yom Tov (full holiday, not Chol Hamoed).
+ * [combinedWithShabbat] is true when the holiday also falls on a Saturday.
+ */
+data class HolidayInfo(
+    val hebrewName: String,
+    val combinedWithShabbat: Boolean
+)
+
 /** Advanced zmanim for Shabbat day (Saturday), all as "HH:mm" strings. */
 data class AdvancedZmanim(
     val city: IsraeliCity,
@@ -61,22 +70,115 @@ object ShabbatTimesCalculator {
     private val TIMEZONE: TimeZone = TimeZone.getTimeZone("Asia/Jerusalem")
 
     /**
-     * Returns candle-lighting and Havdalah times for the relevant Shabbat:
-     * - Sunday through Thursday: the upcoming Friday.
-     * - Friday: today.
-     * - Saturday: yesterday's Friday (i.e. the Shabbat we're currently in).
-     * The reset to the next Shabbat happens when Sunday begins.
+     * Returns candle-lighting and Havdalah times for the upcoming holy day —
+     * either the next Shabbat, or a Yom Tov if one is sooner (e.g. Rosh Hashana
+     * on Tuesday). Handles multi-day Yom Tov (e.g. 2 days of Rosh Hashana) by
+     * extending the havdalah calculation to the last consecutive holy day.
      */
     fun calculateForUpcomingShabbat(): ShabbatResult {
+        val kedusha = detectNextKedushaInfo()
+
+        val times = CITIES.map { city ->
+            calculateForCity(city, kedusha.entryErev, kedusha.exitDay)
+        }
+
+        val holidayInfo = kedusha.yomTovName?.let {
+            HolidayInfo(it, kedusha.combinedWithShabbat)
+        }
+
+        return ShabbatResult(
+            fridayDate = kedusha.entryErev,
+            times = times,
+            holidayInfo = holidayInfo
+        )
+    }
+
+    /**
+     * Scans up to 14 days from today to find the first "kedusha day" — a day
+     * on which melacha is forbidden (Shabbat or full Yom Tov, excluding Chol Hamoed).
+     * If multiple consecutive kedusha days follow (Rosh Hashana's 2 days, or a
+     * Yom Tov that abuts Shabbat), the exitDay is the last of them.
+     */
+    private fun detectNextKedushaInfo(): KedushaInfo {
+        val today = Calendar.getInstance(TIMEZONE).apply {
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        for (offset in 0..14) {
+            val check = Calendar.getInstance(TIMEZONE).apply {
+                time = today.time
+                add(Calendar.DAY_OF_MONTH, offset)
+            }
+            val (isShabbat, isYomTov) = classifyKedusha(check)
+            if (!isShabbat && !isYomTov) continue
+
+            // Walk forward to find the last consecutive kedusha day.
+            var lastDay = check
+            while (true) {
+                val next = Calendar.getInstance(TIMEZONE).apply {
+                    time = lastDay.time
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }
+                val (nextSh, nextYt) = classifyKedusha(next)
+                if (nextSh || nextYt) lastDay = next else break
+            }
+
+            val entryErev = Calendar.getInstance(TIMEZONE).apply {
+                time = check.time
+                add(Calendar.DAY_OF_MONTH, -1)
+            }.time
+
+            val yomTovName = if (isYomTov) {
+                try {
+                    HebrewDateFormatter()
+                        .apply { isHebrewFormat = true }
+                        .formatYomTov(JewishCalendar(check.time))
+                        .ifBlank { null }
+                } catch (t: Throwable) {
+                    Log.e(TAG, "formatYomTov failed", t)
+                    null
+                }
+            } else null
+
+            return KedushaInfo(
+                entryErev = entryErev,
+                exitDay = lastDay.time,
+                isYomTov = isYomTov,
+                combinedWithShabbat = isShabbat && isYomTov,
+                yomTovName = yomTovName
+            )
+        }
+
+        // Fallback (should never happen — Shabbat comes at most every 7 days).
         val friday = nextFriday()
         val saturday = Calendar.getInstance(TIMEZONE).apply {
             time = friday
             add(Calendar.DAY_OF_MONTH, 1)
         }.time
-
-        val times = CITIES.map { city -> calculateForCity(city, friday, saturday) }
-        return ShabbatResult(fridayDate = friday, times = times)
+        return KedushaInfo(friday, saturday, isYomTov = false, combinedWithShabbat = false, yomTovName = null)
     }
+
+    private fun classifyKedusha(cal: Calendar): Pair<Boolean, Boolean> {
+        val isShabbat = cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY
+        val isYomTov = try {
+            val jc = JewishCalendar(cal.time)
+            jc.isYomTov && jc.isAssurBemelacha
+        } catch (t: Throwable) {
+            false
+        }
+        return isShabbat to isYomTov
+    }
+
+    private data class KedushaInfo(
+        val entryErev: Date,
+        val exitDay: Date,
+        val isYomTov: Boolean,
+        val combinedWithShabbat: Boolean,
+        val yomTovName: String?
+    )
 
     private fun calculateForCity(
         city: IsraeliCity,
@@ -227,7 +329,8 @@ object ShabbatTimesCalculator {
 
     data class ShabbatResult(
         val fridayDate: Date,
-        val times: List<ShabbatTimes>
+        val times: List<ShabbatTimes>,
+        val holidayInfo: HolidayInfo? = null
     ) {
         /**
          * Returns a combined Gregorian + Hebrew date string, e.g.

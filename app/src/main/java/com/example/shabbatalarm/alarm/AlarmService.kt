@@ -76,12 +76,8 @@ class AlarmService : Service() {
         serviceScope.cancel()
         releasePlayer()
         stopVibration()
-        // Only clear the pending record if the alarm was a one-shot. For weekly
-        // repeats the receiver has already updated it to next week's trigger.
-        val repo = AlarmRepository(this)
-        if (!repo.getRepeatWeekly()) {
-            repo.clear()
-        }
+        // Removal/reschedule of the alarm in the list is handled by AlarmReceiver
+        // (it knows which alarm fired by its id). The service is alarm-agnostic.
         AlarmWakeLock.release()
         Log.d(TAG, "AlarmService onDestroy")
         super.onDestroy()

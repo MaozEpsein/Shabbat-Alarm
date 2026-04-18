@@ -1,50 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Glow halo behind the flame -->
-    <path
-        android:fillColor="#FFD54F"
-        android:fillAlpha="0.22"
-        android:pathData="M54,48 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0" />
+    <!-- 1. Warm ambient glow around the flame (radial gradient) -->
+    <path android:pathData="M54,48 m-34,0 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="54"
+                android:centerY="48"
+                android:gradientRadius="34"
+                android:type="radial">
+                <item android:offset="0.0" android:color="#55FFD54F" />
+                <item android:offset="0.5" android:color="#22FFA726" />
+                <item android:offset="1.0" android:color="#00FF9800" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- Flame outer (amber) -->
-    <path
-        android:fillColor="#FFC107"
-        android:pathData="M54,26 C46,38 42,46 42,52 C42,58 47,64 54,64 C61,64 66,58 66,52 C66,46 62,38 54,26 Z" />
+    <!-- 2. Outer flame — warm amber teardrop with vertical gradient -->
+    <path android:pathData="M54,24 C46,38 42,46 42,54 C42,62 47,66 54,66 C61,66 66,62 66,54 C66,46 62,38 54,24 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="24"
+                android:endX="54"
+                android:endY="66"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFF59D" />
+                <item android:offset="0.4" android:color="#FFC107" />
+                <item android:offset="1.0" android:color="#FB8C00" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- Flame inner (deep orange) -->
-    <path
-        android:fillColor="#FF6F00"
-        android:pathData="M54,36 C50,42 48,48 48,51 C48,55 50,58 54,58 C58,58 60,55 60,51 C60,48 58,42 54,36 Z" />
+    <!-- 3. Inner flame — deeper orange core -->
+    <path android:pathData="M54,34 C50,42 48,48 48,52 C48,56 50,60 54,60 C58,60 60,56 60,52 C60,48 58,42 54,34 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="34"
+                android:endX="54"
+                android:endY="60"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFAB00" />
+                <item android:offset="1.0" android:color="#E65100" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- Bright tip -->
+    <!-- 4. Hottest spot — white/yellow tip -->
     <path
-        android:fillColor="#FFF59D"
-        android:pathData="M54,42 C52,46 52,50 54,50 C56,50 56,46 54,42 Z" />
+        android:pathData="M54,42 C51,46 51,52 54,52 C57,52 57,46 54,42 Z"
+        android:fillColor="#FFFDE7" />
 
-    <!-- Wick -->
+    <!-- 5. Wick — dark brown -->
     <path
-        android:fillColor="#3E2723"
-        android:pathData="M52.5,64 L55.5,64 L55.5,70 L52.5,70 Z" />
+        android:pathData="M52.5,64 L55.5,64 L55.5,70 L52.5,70 Z"
+        android:fillColor="#3E2723" />
 
-    <!-- Candle body -->
-    <path
-        android:fillColor="#FFF8E7"
-        android:pathData="M44,70 L64,70 L64,88 L44,88 L44,70 Z" />
+    <!-- 6. Candle body — rounded cylinder with horizontal gradient (3D shade) -->
+    <path android:pathData="M45,70 L63,70 C64.5,70 66,71.5 66,73 L66,89 C66,90.5 64.5,92 63,92 L45,92 C43.5,92 42,90.5 42,89 L42,73 C42,71.5 43.5,70 45,70 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="42"
+                android:startY="80"
+                android:endX="66"
+                android:endY="80"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFDF2" />
+                <item android:offset="0.5" android:color="#FFF8E7" />
+                <item android:offset="1.0" android:color="#C9A974" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- Candle body shadow (right edge) -->
+    <!-- 7. Soft highlight stripe on the left edge of the candle -->
     <path
-        android:fillColor="#E8D5A6"
-        android:pathData="M60,70 L64,70 L64,88 L60,88 Z" />
-
-    <!-- Candle body highlight (left edge) -->
-    <path
+        android:pathData="M45,73 L47,73 L47,89 L45,89 Z"
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.55"
-        android:pathData="M45,71 L47,71 L47,87 L45,87 Z" />
+        android:fillAlpha="0.45" />
 
 </vector>

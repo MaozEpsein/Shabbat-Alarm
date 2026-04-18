@@ -67,8 +67,14 @@ fun ShabbatTimesDialog(
             modifier = Modifier.padding(16.dp)
         ) {
             Column(modifier = Modifier.padding(vertical = 20.dp, horizontal = 20.dp)) {
+                val holiday = result.holidayInfo
+                val titleRes = when {
+                    holiday?.combinedWithShabbat == true -> R.string.shabbat_times_title_combined
+                    holiday != null -> R.string.shabbat_times_title_yom_tov
+                    else -> R.string.shabbat_times_title
+                }
                 Text(
-                    text = stringResource(R.string.shabbat_times_title),
+                    text = stringResource(titleRes),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -78,6 +84,15 @@ fun ShabbatTimesDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (holiday != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.shabbat_times_holiday_prefix, holiday.hebrewName),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 

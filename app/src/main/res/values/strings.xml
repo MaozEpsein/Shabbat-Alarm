@@ -19,6 +19,12 @@
     <string name="tomorrow_suffix">מחר</string>
     <string name="allow_exact_alarm_toast">אנא אפשר שעונים מעוררים מדויקים עבור האפליקציה</string>
 
+    <!-- Multi-alarm UI -->
+    <string name="alarms_list_title">השעונים המעוררים שלך</string>
+    <string name="cd_cancel_alarm">בטל שעון מעורר</string>
+    <string name="weekly_badge">שבועי</string>
+    <string name="max_alarms_reached">ניתן להגדיר עד %1$d שעונים מעוררים</string>
+
     <!-- Content descriptions -->
     <string name="cd_shabbat_times">זמני שבת</string>
     <string name="cd_settings">הגדרות</string>
@@ -31,6 +37,9 @@
 
     <!-- Shabbat times dialog -->
     <string name="shabbat_times_title">זמני שבת</string>
+    <string name="shabbat_times_title_yom_tov">זמני יום טוב</string>
+    <string name="shabbat_times_title_combined">זמני שבת ויום טוב</string>
+    <string name="shabbat_times_holiday_prefix">🕯 חג: %1$s</string>
     <string name="shabbat_times_column_city">עיר</string>
     <string name="shabbat_times_column_entry">כניסה</string>
     <string name="shabbat_times_column_exit">יציאה</string>
