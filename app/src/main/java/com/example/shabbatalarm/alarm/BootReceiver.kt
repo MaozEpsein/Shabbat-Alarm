@@ -11,10 +11,7 @@ import android.util.Log
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
-            intent.action != Intent.ACTION_LOCKED_BOOT_COMPLETED) {
-            return
-        }
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
         val repo = AlarmRepository(context)
         val triggerAt = repo.getScheduled() ?: return
