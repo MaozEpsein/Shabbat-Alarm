@@ -83,7 +83,9 @@ class AlarmService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startPlayback() {
-        val toneUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        val storedToneUri = AlarmRepository(this).getAlarmToneUri()?.let { Uri.parse(it) }
+        val toneUri: Uri = storedToneUri
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: Settings.System.DEFAULT_ALARM_ALERT_URI
 
         mediaPlayer = MediaPlayer().apply {

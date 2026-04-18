@@ -22,16 +22,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -72,9 +74,12 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
 
     var scheduledLabel by rememberSaveable { mutableStateOf<String?>(null) }
     var showShabbatTimes by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     var durationSeconds by rememberSaveable { mutableStateOf(repository.getDurationSeconds()) }
     var isBatteryOptimized by rememberSaveable { mutableStateOf(false) }
     var repeatWeekly by rememberSaveable { mutableStateOf(repository.getRepeatWeekly()) }
+    var timeInputMode by rememberSaveable { mutableStateOf(false) }
+    var alarmToneUri by rememberSaveable { mutableStateOf(repository.getAlarmToneUri()) }
 
     val exactAlarmSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -139,6 +144,13 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
+            IconButton(onClick = { showSettings = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
 
         if (isBatteryOptimized) {
@@ -167,47 +179,29 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        TimePicker(state = timePickerState)
+        val timePickerColors = TimePickerDefaults.colors(
+            timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            timeSelectorSelectedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Alarm duration: $durationSeconds seconds",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Slider(
-                value = durationSeconds.toFloat(),
-                onValueChange = { durationSeconds = it.toInt() },
-                onValueChangeFinished = { repository.setDurationSeconds(durationSeconds) },
-                valueRange = AlarmRepository.MIN_DURATION_SECONDS.toFloat()
-                        ..AlarmRepository.MAX_DURATION_SECONDS.toFloat(),
-                steps = ((AlarmRepository.MAX_DURATION_SECONDS
-                        - AlarmRepository.MIN_DURATION_SECONDS)
-                        / AlarmRepository.DURATION_STEP_SECONDS) - 1,
-                modifier = Modifier.fillMaxWidth()
-            )
+        if (timeInputMode) {
+            TimeInput(state = timePickerState, colors = timePickerColors)
+        } else {
+            TimePicker(state = timePickerState, colors = timePickerColors)
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.End
         ) {
-            Text(
-                text = "Repeat every week",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = repeatWeekly,
-                onCheckedChange = {
-                    repeatWeekly = it
-                    repository.setRepeatWeekly(it)
-                }
-            )
+            TextButton(onClick = { timeInputMode = !timeInputMode }) {
+                Text(
+                    text = if (timeInputMode) "Use dial" else "Type time",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
 
         Row(
@@ -277,6 +271,27 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
 
     if (showShabbatTimes) {
         ShabbatTimesDialog(onDismiss = { showShabbatTimes = false })
+    }
+
+    if (showSettings) {
+        SettingsDialog(
+            currentDurationSeconds = durationSeconds,
+            repeatWeekly = repeatWeekly,
+            currentToneUri = alarmToneUri,
+            onDurationChange = {
+                durationSeconds = it
+                repository.setDurationSeconds(it)
+            },
+            onRepeatChange = {
+                repeatWeekly = it
+                repository.setRepeatWeekly(it)
+            },
+            onToneChange = {
+                alarmToneUri = it
+                repository.setAlarmToneUri(it)
+            },
+            onDismiss = { showSettings = false }
+        )
     }
 }
 

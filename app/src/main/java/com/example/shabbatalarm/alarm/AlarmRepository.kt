@@ -41,11 +41,24 @@ class AlarmRepository(context: Context) {
         prefs.edit().putBoolean(KEY_REPEAT_WEEKLY, repeat).apply()
     }
 
+    /**
+     * User-selected alarm tone URI. Null means fall back to the system default
+     * (RingtoneManager.getDefaultUri(TYPE_ALARM)).
+     */
+    fun getAlarmToneUri(): String? = prefs.getString(KEY_ALARM_TONE_URI, null)
+
+    fun setAlarmToneUri(uri: String?) {
+        prefs.edit().apply {
+            if (uri == null) remove(KEY_ALARM_TONE_URI) else putString(KEY_ALARM_TONE_URI, uri)
+        }.apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "shabbat_alarm_prefs"
         private const val KEY_TRIGGER_AT = "trigger_at_millis"
         private const val KEY_DURATION_SECONDS = "duration_seconds"
         private const val KEY_REPEAT_WEEKLY = "repeat_weekly"
+        private const val KEY_ALARM_TONE_URI = "alarm_tone_uri"
 
         const val DEFAULT_DURATION_SECONDS = 15
         const val MIN_DURATION_SECONDS = 5
