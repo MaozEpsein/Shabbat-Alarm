@@ -11,6 +11,9 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,10 +42,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -53,6 +59,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.shabbatalarm.alarm.AlarmRepository
 import com.example.shabbatalarm.alarm.AlarmScheduler
+import com.example.shabbatalarm.alarm.ShabbatReminderScheduler
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -62,7 +69,9 @@ import java.util.Locale
 @Composable
 fun AlarmScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val shareScope = rememberCoroutineScope()
     val scheduler = remember { AlarmScheduler(context) }
+    val reminderScheduler = remember { ShabbatReminderScheduler(context) }
     val repository = remember { AlarmRepository(context) }
     val now = remember { Calendar.getInstance() }
 
@@ -78,7 +87,10 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
     var durationSeconds by rememberSaveable { mutableStateOf(repository.getDurationSeconds()) }
     var isBatteryOptimized by rememberSaveable { mutableStateOf(false) }
     var repeatWeekly by rememberSaveable { mutableStateOf(repository.getRepeatWeekly()) }
+    var vibrationEnabled by rememberSaveable { mutableStateOf(repository.getVibrationEnabled()) }
     var alarmToneUri by rememberSaveable { mutableStateOf(repository.getAlarmToneUri()) }
+    var reminderEnabled by rememberSaveable { mutableStateOf(repository.getPreShabbatReminderEnabled()) }
+    var defaultCityIndex by rememberSaveable { mutableStateOf(repository.getDefaultCityIndex()) }
 
     // Pre-load strings that are referenced from non-composable lambdas.
     val tomorrowSuffix = stringResource(R.string.tomorrow_suffix)
@@ -129,9 +141,25 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val isLit = scheduledLabel != null
+    val topTint by animateColorAsState(
+        targetValue = if (isLit)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        else
+            Color.Transparent,
+        animationSpec = tween(durationMillis = 800),
+        label = "backgroundTint"
+    )
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(topTint, Color.Transparent),
+        startY = 0f,
+        endY = 600f
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(backgroundBrush)
             .padding(horizontal = 24.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
@@ -167,7 +195,7 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
         }
 
         AnimatedCandle(
-            isLit = scheduledLabel != null,
+            isLit = isLit,
             modifier = Modifier.size(width = 140.dp, height = 120.dp)
         )
 
@@ -260,7 +288,10 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
         SettingsDialog(
             currentDurationSeconds = durationSeconds,
             repeatWeekly = repeatWeekly,
+            vibrationEnabled = vibrationEnabled,
             currentToneUri = alarmToneUri,
+            reminderEnabled = reminderEnabled,
+            defaultCityIndex = defaultCityIndex,
             onDurationChange = {
                 durationSeconds = it
                 repository.setDurationSeconds(it)
@@ -269,10 +300,25 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                 repeatWeekly = it
                 repository.setRepeatWeekly(it)
             },
+            onVibrationChange = {
+                vibrationEnabled = it
+                repository.setVibrationEnabled(it)
+            },
             onToneChange = {
                 alarmToneUri = it
                 repository.setAlarmToneUri(it)
             },
+            onReminderEnabledChange = {
+                reminderEnabled = it
+                repository.setPreShabbatReminderEnabled(it)
+                if (it) reminderScheduler.scheduleNext() else reminderScheduler.cancel()
+            },
+            onDefaultCityChange = {
+                defaultCityIndex = it
+                repository.setDefaultCityIndex(it)
+                if (reminderEnabled) reminderScheduler.scheduleNext()
+            },
+            onShareApp = { ApkSharer.share(context, shareScope) },
             onDismiss = { showSettings = false }
         )
     }

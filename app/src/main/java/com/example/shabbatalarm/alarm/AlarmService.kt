@@ -3,6 +3,7 @@ package com.example.shabbatalarm.alarm
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
@@ -11,6 +12,9 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -36,6 +40,7 @@ import kotlinx.coroutines.launch
 class AlarmService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
+    private var vibrator: Vibrator? = null
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var autoStopJob: Job? = null
@@ -60,6 +65,7 @@ class AlarmService : Service() {
         }
 
         startPlayback()
+        startVibrationIfEnabled()
         scheduleAutoStop()
 
         return START_NOT_STICKY
@@ -69,6 +75,7 @@ class AlarmService : Service() {
         autoStopJob?.cancel()
         serviceScope.cancel()
         releasePlayer()
+        stopVibration()
         // Only clear the pending record if the alarm was a one-shot. For weekly
         // repeats the receiver has already updated it to next week's trigger.
         val repo = AlarmRepository(this)
@@ -155,6 +162,30 @@ class AlarmService : Service() {
             runCatching { mp.release() }
         }
         mediaPlayer = null
+    }
+
+    private fun startVibrationIfEnabled() {
+        if (!AlarmRepository(this).getVibrationEnabled()) return
+        val v = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+        if (!v.hasVibrator()) return
+
+        // Pattern: 500ms on, 500ms off, repeating from index 0.
+        val pattern = longArrayOf(0L, 500L, 500L)
+        val effect = VibrationEffect.createWaveform(pattern, 0)
+        v.vibrate(effect)
+        vibrator = v
+        Log.d(TAG, "Vibration started")
+    }
+
+    private fun stopVibration() {
+        vibrator?.let { runCatching { it.cancel() } }
+        vibrator = null
     }
 
     private fun buildNotification(): Notification {

@@ -103,6 +103,52 @@ object ShabbatTimesCalculator {
         }
     }
 
+    /**
+     * Returns the candle-lighting moment for the given city and Friday, or null
+     * if sunset cannot be computed.
+     */
+    fun computeCandleLighting(city: IsraeliCity, fridayDate: Date): Date? {
+        return try {
+            val safeElevation = city.elevation.coerceAtLeast(0.0)
+            val location = GeoLocation(
+                city.nameEn, city.latitude, city.longitude, safeElevation, TIMEZONE
+            )
+            val zmanim = ComplexZmanimCalendar(location).apply {
+                calendar.time = fridayDate
+            }
+            val sunset = zmanim.sunset ?: return null
+            Date(sunset.time - city.candleLightingOffsetMinutes * 60_000L)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to compute candle lighting for ${city.nameEn}", t)
+            null
+        }
+    }
+
+    /**
+     * Returns the next upcoming candle-lighting moment for the given city
+     * (starts from today; if today is past, rolls forward by one week).
+     */
+    fun computeNextCandleLighting(city: IsraeliCity): Date? {
+        val now = System.currentTimeMillis()
+        val cal = Calendar.getInstance(TIMEZONE).apply {
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        // Advance to the next Friday (or today if Friday).
+        while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.FRIDAY) {
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        // Try up to a year ahead to land on a future candle-lighting.
+        repeat(53) {
+            val lighting = computeCandleLighting(city, cal.time)
+            if (lighting != null && lighting.time > now) return lighting
+            cal.add(Calendar.DAY_OF_MONTH, 7)
+        }
+        return null
+    }
+
     private fun nextFriday(): Date {
         val cal = Calendar.getInstance(TIMEZONE)
         val today = cal.get(Calendar.DAY_OF_WEEK)

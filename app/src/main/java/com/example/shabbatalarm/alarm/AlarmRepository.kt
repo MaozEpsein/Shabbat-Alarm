@@ -53,12 +53,37 @@ class AlarmRepository(context: Context) {
         }.apply()
     }
 
+    /** Whether to vibrate the device in addition to playing the tone (default false). */
+    fun getVibrationEnabled(): Boolean = prefs.getBoolean(KEY_VIBRATION, false)
+
+    fun setVibrationEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_VIBRATION, enabled).apply()
+    }
+
+    /** Weekly pre-Shabbat reminder (30 min before candle lighting). Default: false. */
+    fun getPreShabbatReminderEnabled(): Boolean =
+        prefs.getBoolean(KEY_REMINDER_ENABLED, false)
+
+    fun setPreShabbatReminderEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_REMINDER_ENABLED, enabled).apply()
+    }
+
+    /** Index into ShabbatTimesCalculator.CITIES used by the reminder. Default: 0 (Jerusalem). */
+    fun getDefaultCityIndex(): Int = prefs.getInt(KEY_DEFAULT_CITY_INDEX, 0)
+
+    fun setDefaultCityIndex(index: Int) {
+        prefs.edit().putInt(KEY_DEFAULT_CITY_INDEX, index).apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "shabbat_alarm_prefs"
         private const val KEY_TRIGGER_AT = "trigger_at_millis"
         private const val KEY_DURATION_SECONDS = "duration_seconds"
         private const val KEY_REPEAT_WEEKLY = "repeat_weekly"
         private const val KEY_ALARM_TONE_URI = "alarm_tone_uri"
+        private const val KEY_VIBRATION = "vibration_enabled"
+        private const val KEY_REMINDER_ENABLED = "pre_shabbat_reminder_enabled"
+        private const val KEY_DEFAULT_CITY_INDEX = "default_city_index"
 
         const val DEFAULT_DURATION_SECONDS = 15
         const val MIN_DURATION_SECONDS = 5

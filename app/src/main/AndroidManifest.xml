@@ -21,6 +21,9 @@
     <!-- Request exemption from Doze/Battery Optimization for reliable alarm delivery -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- Optional vibration alongside the alarm tone -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:name=".ShabbatAlarmApp"
         android:allowBackup="true"
@@ -47,6 +50,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".alarm.ShabbatReminderReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".alarm.BootReceiver"
             android:enabled="true"
             android:exported="true">
@@ -59,6 +66,16 @@
             android:name=".alarm.AlarmService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
     </application>
 

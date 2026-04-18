@@ -45,15 +45,26 @@ import com.example.shabbatalarm.R
 import com.example.shabbatalarm.alarm.AlarmRepository
 import com.example.shabbatalarm.alarm.AlarmTone
 import com.example.shabbatalarm.alarm.AlarmTones
+import com.example.shabbatalarm.alarm.IsraeliCity
+import com.example.shabbatalarm.alarm.ShabbatTimesCalculator
+
+private enum class SettingsSubView { MAIN, SOUND, REMINDER }
 
 @Composable
 fun SettingsDialog(
     currentDurationSeconds: Int,
     repeatWeekly: Boolean,
+    vibrationEnabled: Boolean,
     currentToneUri: String?,
+    reminderEnabled: Boolean,
+    defaultCityIndex: Int,
     onDurationChange: (Int) -> Unit,
     onRepeatChange: (Boolean) -> Unit,
+    onVibrationChange: (Boolean) -> Unit,
     onToneChange: (String?) -> Unit,
+    onReminderEnabledChange: (Boolean) -> Unit,
+    onDefaultCityChange: (Int) -> Unit,
+    onShareApp: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -61,12 +72,16 @@ fun SettingsDialog(
     val tones = remember { AlarmTones.loadAvailable(context) }
     val preview = remember { TonePreview(context, scope) }
 
-    var showAlarmSoundPicker by rememberSaveable { mutableStateOf(false) }
+    var subView by rememberSaveable { mutableStateOf(SettingsSubView.MAIN) }
 
     val systemDefaultLabel = stringResource(R.string.settings_alarm_sound_default)
     val effectiveSelectedUri = currentToneUri ?: tones.firstOrNull()?.uri?.toString()
     val currentToneTitle = tones.firstOrNull { it.uri.toString() == effectiveSelectedUri }
         ?.title ?: systemDefaultLabel
+
+    val cities = remember { ShabbatTimesCalculator.CITIES }
+    val safeCityIndex = defaultCityIndex.coerceIn(0, cities.lastIndex)
+    val currentCityName = cities[safeCityIndex].nameHe
 
     DisposableEffect(Unit) {
         onDispose { preview.release() }
@@ -83,8 +98,8 @@ fun SettingsDialog(
             modifier = Modifier.padding(16.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                if (showAlarmSoundPicker) {
-                    AlarmSoundPickerView(
+                when (subView) {
+                    SettingsSubView.SOUND -> AlarmSoundPickerView(
                         tones = tones,
                         selectedUri = effectiveSelectedUri,
                         onSelect = { tone ->
@@ -93,21 +108,35 @@ fun SettingsDialog(
                         },
                         onBack = {
                             preview.release()
-                            showAlarmSoundPicker = false
+                            subView = SettingsSubView.MAIN
                         },
                         onDismiss = {
                             preview.release()
                             onDismiss()
                         }
                     )
-                } else {
-                    MainSettingsView(
+                    SettingsSubView.REMINDER -> ReminderPickerView(
+                        enabled = reminderEnabled,
+                        selectedCityIndex = safeCityIndex,
+                        cities = cities,
+                        onEnabledChange = onReminderEnabledChange,
+                        onCityChange = onDefaultCityChange,
+                        onBack = { subView = SettingsSubView.MAIN },
+                        onDismiss = onDismiss
+                    )
+                    SettingsSubView.MAIN -> MainSettingsView(
                         currentDurationSeconds = currentDurationSeconds,
                         repeatWeekly = repeatWeekly,
+                        vibrationEnabled = vibrationEnabled,
                         currentToneTitle = currentToneTitle,
+                        reminderEnabled = reminderEnabled,
+                        currentCityName = currentCityName,
                         onDurationChange = onDurationChange,
                         onRepeatChange = onRepeatChange,
-                        onOpenSoundPicker = { showAlarmSoundPicker = true },
+                        onVibrationChange = onVibrationChange,
+                        onOpenSoundPicker = { subView = SettingsSubView.SOUND },
+                        onOpenReminderPicker = { subView = SettingsSubView.REMINDER },
+                        onShareApp = onShareApp,
                         onDismiss = onDismiss
                     )
                 }
@@ -120,10 +149,16 @@ fun SettingsDialog(
 private fun MainSettingsView(
     currentDurationSeconds: Int,
     repeatWeekly: Boolean,
+    vibrationEnabled: Boolean,
     currentToneTitle: String,
+    reminderEnabled: Boolean,
+    currentCityName: String,
     onDurationChange: (Int) -> Unit,
     onRepeatChange: (Boolean) -> Unit,
+    onVibrationChange: (Boolean) -> Unit,
     onOpenSoundPicker: () -> Unit,
+    onOpenReminderPicker: () -> Unit,
+    onShareApp: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Text(
@@ -135,34 +170,13 @@ private fun MainSettingsView(
     Spacer(modifier = Modifier.height(20.dp))
 
     // ── Alarm sound (opens sub-view) ───────────────────────────────────────
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onOpenSoundPicker)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.settings_alarm_sound),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = currentToneTitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Icon(
-            imageVector = Icons.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    NavigationRow(
+        title = stringResource(R.string.settings_alarm_sound),
+        subtitle = currentToneTitle,
+        onClick = onOpenSoundPicker
+    )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(8.dp))
     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
     Spacer(modifier = Modifier.height(16.dp))
 
@@ -205,6 +219,55 @@ private fun MainSettingsView(
         Switch(checked = repeatWeekly, onCheckedChange = onRepeatChange)
     }
 
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // ── Vibration ─────────────────────────────────────────────────────────
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.settings_vibration),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(R.string.settings_vibration_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = vibrationEnabled, onCheckedChange = onVibrationChange)
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // ── Pre-Shabbat reminder (opens sub-view) ──────────────────────────────
+    val reminderSubtitle = if (reminderEnabled) {
+        stringResource(R.string.settings_reminder_enabled_prefix) + currentCityName
+    } else {
+        stringResource(R.string.settings_reminder_disabled)
+    }
+    NavigationRow(
+        title = stringResource(R.string.settings_reminder),
+        subtitle = reminderSubtitle,
+        onClick = onOpenReminderPicker
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+    Spacer(modifier = Modifier.height(8.dp))
+
+    // ── Share APK ─────────────────────────────────────────────────────────
+    NavigationRow(
+        title = stringResource(R.string.settings_share_app),
+        subtitle = stringResource(R.string.settings_share_app_desc),
+        onClick = onShareApp
+    )
+
     Spacer(modifier = Modifier.height(16.dp))
 
     Row(
@@ -214,6 +277,40 @@ private fun MainSettingsView(
         TextButton(onClick = onDismiss) {
             Text(stringResource(R.string.close))
         }
+    }
+}
+
+@Composable
+private fun NavigationRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            imageVector = Icons.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -260,6 +357,110 @@ private fun AlarmSoundPickerView(
                 selected = tone.uri.toString() == selectedUri,
                 onSelect = { onSelect(tone) }
             )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End
+    ) {
+        TextButton(onClick = onDismiss) {
+            Text(stringResource(R.string.close))
+        }
+    }
+}
+
+@Composable
+private fun ReminderPickerView(
+    enabled: Boolean,
+    selectedCityIndex: Int,
+    cities: List<IsraeliCity>,
+    onEnabledChange: (Boolean) -> Unit,
+    onCityChange: (Int) -> Unit,
+    onBack: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onBack) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = stringResource(R.string.settings_reminder),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = stringResource(R.string.settings_reminder_desc),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Enable switch
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.settings_reminder_enable),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(checked = enabled, onCheckedChange = onEnabledChange)
+    }
+
+    if (enabled) {
+        Spacer(modifier = Modifier.height(12.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(R.string.settings_reminder_city_label),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Column(
+            modifier = Modifier
+                .heightIn(max = 300.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            cities.forEachIndexed { index, city ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onCityChange(index) }
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = index == selectedCityIndex,
+                        onClick = { onCityChange(index) }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = city.nameHe,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (index == selectedCityIndex)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 

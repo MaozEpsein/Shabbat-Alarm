@@ -7,8 +7,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Shabbat typography: serif for display/headline (elegant, ceremonial feel)
+ * Shabbat typography: serif for display/headline/title (elegant, ceremonial feel)
  * + default sans-serif for body (readability).
+ *
+ * On Hebrew-locale devices FontFamily.Serif resolves to Noto Serif Hebrew — a
+ * proper Hebrew serif. To upgrade later to Frank Ruhl Libre specifically, add
+ * Google Downloadable Fonts (Android Studio → File → New → Font resource file)
+ * and replace FontFamily.Serif here with the generated FontFamily.
  */
 val ShabbatTypography = Typography(
     displayLarge = TextStyle(
@@ -16,7 +21,7 @@ val ShabbatTypography = Typography(
         fontWeight = FontWeight.Normal,
         fontSize = 57.sp,
         lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp
+        letterSpacing = 0.sp
     ),
     displayMedium = TextStyle(
         fontFamily = FontFamily.Serif,
@@ -32,9 +37,9 @@ val ShabbatTypography = Typography(
     ),
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
+        fontWeight = FontWeight.Medium,        // lighter — reads more ceremonial than SemiBold
+        fontSize = 34.sp,                       // slightly larger for presence
+        lineHeight = 42.sp,
         letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(

@@ -44,10 +44,30 @@
     <string name="settings_duration">אורך שעון מעורר: %1$d שניות</string>
     <string name="settings_repeat_weekly">חזור כל שבוע</string>
     <string name="settings_repeat_weekly_desc">השעון המעורר יופעל שוב באותה שעה בשבוע הבא.</string>
+    <string name="settings_vibration">רטט</string>
+    <string name="settings_vibration_desc">הפעל רטט בנוסף לצליל.</string>
+
+    <!-- Pre-Shabbat reminder (30 min before candle lighting) -->
+    <string name="settings_reminder">תזכורת שבת</string>
+    <string name="settings_reminder_desc">התראה 30 דקות לפני כניסת שבת</string>
+    <string name="settings_reminder_enable">הפעל תזכורת</string>
+    <string name="settings_reminder_city_label">עיר לחישוב הזמן</string>
+    <string name="settings_reminder_disabled">כבוי</string>
+    <string name="settings_reminder_enabled_prefix">פעיל · </string>
+    <string name="reminder_channel_name">תזכורת שבת</string>
+    <string name="reminder_channel_description">מזכיר 30 דקות לפני כניסת שבת</string>
+    <string name="reminder_notification_title">כניסת שבת בעוד 30 דק\'</string>
+    <string name="reminder_notification_text">אל תשכח לכוון שעון מעורר</string>
 
     <!-- Foreground notification -->
     <string name="notification_title">שעון מעורר - לשבת</string>
     <string name="notification_text">השעון המעורר פועל…</string>
     <string name="notification_channel_name">שעון מעורר - לשבת</string>
     <string name="notification_channel_description">משמיע את צליל השעון המעורר של השבת</string>
+
+    <!-- Share APK -->
+    <string name="settings_share_app">שתף את האפליקציה</string>
+    <string name="settings_share_app_desc">שלח את קובץ ההתקנה לחברים</string>
+    <string name="share_chooser_title">שתף דרך…</string>
+    <string name="share_app_failed">לא הצלחנו להכין את קובץ ההתקנה</string>
 </resources>

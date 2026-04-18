@@ -16,6 +16,10 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
         val repo = AlarmRepository(context)
+
+        // Re-arm the weekly Shabbat reminder (no-op if disabled).
+        ShabbatReminderScheduler(context).scheduleNext()
+
         val triggerAt = repo.getScheduled() ?: return
         val scheduler = AlarmScheduler(context)
 
