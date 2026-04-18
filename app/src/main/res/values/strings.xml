@@ -36,6 +36,19 @@
     <string name="shabbat_times_column_exit">יציאה</string>
     <string name="shabbat_times_note">כניסה = הדלקת נרות. יציאה = צאת שבת (צאת הכוכבים, כ-8.5° מתחת לאופק).</string>
 
+    <!-- Advanced zmanim tab -->
+    <string name="shabbat_tab_times">כניסה ויציאה</string>
+    <string name="shabbat_tab_zmanim">זמנים נוספים</string>
+    <string name="zmanim_city_note">לחץ על שם העיר להחלפה</string>
+    <string name="zmanim_sof_zman_shma">סוף זמן קריאת שמע</string>
+    <string name="zmanim_sof_zman_tfila">סוף זמן תפילה</string>
+    <string name="zmanim_chatzos">חצות היום</string>
+    <string name="zmanim_mincha_gedola">מנחה גדולה</string>
+    <string name="zmanim_mincha_ketana">מנחה קטנה</string>
+    <string name="zmanim_plag_hamincha">פלג המנחה</string>
+    <string name="zmanim_shekia">שקיעה</string>
+    <string name="zmanim_method_note">זמנים לפי שיטת הגר\"א</string>
+
     <!-- Settings dialog -->
     <string name="settings_title">הגדרות</string>
     <string name="settings_alarm_sound">צליל שעון מעורר</string>
@@ -49,15 +62,14 @@
 
     <!-- Pre-Shabbat reminder (30 min before candle lighting) -->
     <string name="settings_reminder">תזכורת שבת</string>
-    <string name="settings_reminder_desc">התראה 30 דקות לפני כניסת שבת</string>
+    <string name="settings_reminder_desc">התראה כ-40 דקות לפני כניסת שבת בירושלים</string>
     <string name="settings_reminder_enable">הפעל תזכורת</string>
-    <string name="settings_reminder_city_label">עיר לחישוב הזמן</string>
     <string name="settings_reminder_disabled">כבוי</string>
-    <string name="settings_reminder_enabled_prefix">פעיל · </string>
+    <string name="settings_reminder_enabled_label">פעיל</string>
     <string name="reminder_channel_name">תזכורת שבת</string>
-    <string name="reminder_channel_description">מזכיר 30 דקות לפני כניסת שבת</string>
-    <string name="reminder_notification_title">כניסת שבת בעוד 30 דק\'</string>
-    <string name="reminder_notification_text">אל תשכח לכוון שעון מעורר</string>
+    <string name="reminder_channel_description">מזכיר כ-40 דקות לפני כניסת שבת בירושלים</string>
+    <string name="reminder_notification_title">תזכורת שבת</string>
+    <string name="reminder_notification_text">שבת נכנסת בעוד כ-40 דק\' בירושלים וכ-60 דק\' בשאר הארץ — לא לשכוח לכוון שעון מעורר לשבת</string>
 
     <!-- Foreground notification -->
     <string name="notification_title">שעון מעורר - לשבת</string>

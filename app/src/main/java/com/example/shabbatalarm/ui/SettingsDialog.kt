@@ -57,13 +57,11 @@ fun SettingsDialog(
     vibrationEnabled: Boolean,
     currentToneUri: String?,
     reminderEnabled: Boolean,
-    defaultCityIndex: Int,
     onDurationChange: (Int) -> Unit,
     onRepeatChange: (Boolean) -> Unit,
     onVibrationChange: (Boolean) -> Unit,
     onToneChange: (String?) -> Unit,
     onReminderEnabledChange: (Boolean) -> Unit,
-    onDefaultCityChange: (Int) -> Unit,
     onShareApp: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -81,7 +79,6 @@ fun SettingsDialog(
 
     val cities = remember { ShabbatTimesCalculator.CITIES }
     val safeCityIndex = defaultCityIndex.coerceIn(0, cities.lastIndex)
-    val currentCityName = cities[safeCityIndex].nameHe
 
     DisposableEffect(Unit) {
         onDispose { preview.release() }
@@ -117,10 +114,7 @@ fun SettingsDialog(
                     )
                     SettingsSubView.REMINDER -> ReminderPickerView(
                         enabled = reminderEnabled,
-                        selectedCityIndex = safeCityIndex,
-                        cities = cities,
                         onEnabledChange = onReminderEnabledChange,
-                        onCityChange = onDefaultCityChange,
                         onBack = { subView = SettingsSubView.MAIN },
                         onDismiss = onDismiss
                     )
@@ -130,7 +124,6 @@ fun SettingsDialog(
                         vibrationEnabled = vibrationEnabled,
                         currentToneTitle = currentToneTitle,
                         reminderEnabled = reminderEnabled,
-                        currentCityName = currentCityName,
                         onDurationChange = onDurationChange,
                         onRepeatChange = onRepeatChange,
                         onVibrationChange = onVibrationChange,
@@ -152,7 +145,6 @@ private fun MainSettingsView(
     vibrationEnabled: Boolean,
     currentToneTitle: String,
     reminderEnabled: Boolean,
-    currentCityName: String,
     onDurationChange: (Int) -> Unit,
     onRepeatChange: (Boolean) -> Unit,
     onVibrationChange: (Boolean) -> Unit,
@@ -247,7 +239,7 @@ private fun MainSettingsView(
 
     // ── Pre-Shabbat reminder (opens sub-view) ──────────────────────────────
     val reminderSubtitle = if (reminderEnabled) {
-        stringResource(R.string.settings_reminder_enabled_prefix) + currentCityName
+        stringResource(R.string.settings_reminder_enabled_label)
     } else {
         stringResource(R.string.settings_reminder_disabled)
     }
@@ -375,10 +367,7 @@ private fun AlarmSoundPickerView(
 @Composable
 private fun ReminderPickerView(
     enabled: Boolean,
-    selectedCityIndex: Int,
-    cities: List<IsraeliCity>,
     onEnabledChange: (Boolean) -> Unit,
-    onCityChange: (Int) -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -401,12 +390,12 @@ private fun ReminderPickerView(
     Spacer(modifier = Modifier.height(8.dp))
     Text(
         text = stringResource(R.string.settings_reminder_desc),
-        style = MaterialTheme.typography.bodySmall,
+        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(20.dp))
 
-    // Enable switch
+    // Enable switch only — city is fixed to Jerusalem.
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -418,50 +407,6 @@ private fun ReminderPickerView(
             modifier = Modifier.weight(1f)
         )
         Switch(checked = enabled, onCheckedChange = onEnabledChange)
-    }
-
-    if (enabled) {
-        Spacer(modifier = Modifier.height(12.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = stringResource(R.string.settings_reminder_city_label),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Column(
-            modifier = Modifier
-                .heightIn(max = 300.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            cities.forEachIndexed { index, city ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onCityChange(index) }
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = index == selectedCityIndex,
-                        onClick = { onCityChange(index) }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = city.nameHe,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (index == selectedCityIndex)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
     }
 
     Spacer(modifier = Modifier.height(16.dp))

@@ -281,7 +281,14 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
     }
 
     if (showShabbatTimes) {
-        ShabbatTimesDialog(onDismiss = { showShabbatTimes = false })
+        ShabbatTimesDialog(
+            defaultCityIndex = defaultCityIndex,
+            onCityChange = {
+                defaultCityIndex = it
+                repository.setDefaultCityIndex(it)
+            },
+            onDismiss = { showShabbatTimes = false }
+        )
     }
 
     if (showSettings) {
@@ -291,7 +298,6 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
             vibrationEnabled = vibrationEnabled,
             currentToneUri = alarmToneUri,
             reminderEnabled = reminderEnabled,
-            defaultCityIndex = defaultCityIndex,
             onDurationChange = {
                 durationSeconds = it
                 repository.setDurationSeconds(it)
@@ -312,11 +318,6 @@ fun AlarmScreen(modifier: Modifier = Modifier) {
                 reminderEnabled = it
                 repository.setPreShabbatReminderEnabled(it)
                 if (it) reminderScheduler.scheduleNext() else reminderScheduler.cancel()
-            },
-            onDefaultCityChange = {
-                defaultCityIndex = it
-                repository.setDefaultCityIndex(it)
-                if (reminderEnabled) reminderScheduler.scheduleNext()
             },
             onShareApp = { ApkSharer.share(context, shareScope) },
             onDismiss = { showSettings = false }

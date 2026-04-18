@@ -7,8 +7,10 @@ import android.content.Intent
 import android.util.Log
 
 /**
- * Schedules a weekly reminder that fires 30 minutes before candle lighting in
- * the user-chosen default city. When the reminder fires (see
+ * Schedules a weekly reminder that fires 40 minutes before candle lighting in
+ * Jerusalem. That gives roughly 40 minutes' heads-up to Jerusalem residents and
+ * roughly an hour to the rest of the country (since most cities light candles
+ * ~22 minutes later than Jerusalem). When the reminder fires (see
  * [ShabbatReminderReceiver]) it also re-arms itself for the next week.
  */
 class ShabbatReminderScheduler(private val context: Context) {
@@ -27,9 +29,10 @@ class ShabbatReminderScheduler(private val context: Context) {
             return
         }
 
-        val cityIndex = repo.getDefaultCityIndex()
-            .coerceIn(0, ShabbatTimesCalculator.CITIES.lastIndex)
-        val city = ShabbatTimesCalculator.CITIES[cityIndex]
+        // The reminder always anchors to Jerusalem candle lighting, regardless
+        // of the user's preferred city for zmanim display.
+        val city = ShabbatTimesCalculator.CITIES.firstOrNull { it.nameEn == "Jerusalem" }
+            ?: ShabbatTimesCalculator.CITIES[0]
 
         val candleLighting = ShabbatTimesCalculator.computeNextCandleLighting(city)
         if (candleLighting == null) {
@@ -72,7 +75,7 @@ class ShabbatReminderScheduler(private val context: Context) {
     companion object {
         private const val TAG = "ShabbatReminder"
         private const val REQUEST_CODE = 2001
-        private const val REMINDER_OFFSET_MS = 30 * 60 * 1_000L // 30 minutes
+        private const val REMINDER_OFFSET_MS = 40 * 60 * 1_000L // 40 minutes before Jerusalem candle lighting
         const val ACTION_FIRE = "com.example.shabbatalarm.ACTION_REMINDER_FIRE"
     }
 }

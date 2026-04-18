@@ -46,9 +46,11 @@ class ShabbatReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val body = context.getString(R.string.reminder_notification_text)
         val notification = NotificationCompat.Builder(context, ShabbatAlarmApp.REMINDER_CHANNEL_ID)
             .setContentTitle(context.getString(R.string.reminder_notification_title))
-            .setContentText(context.getString(R.string.reminder_notification_text))
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)

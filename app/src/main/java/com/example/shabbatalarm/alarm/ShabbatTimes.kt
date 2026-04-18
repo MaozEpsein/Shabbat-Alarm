@@ -30,6 +30,19 @@ data class ShabbatTimes(
     val havdalah: String        // "HH:mm"
 )
 
+/** Advanced zmanim for Shabbat day (Saturday), all as "HH:mm" strings. */
+data class AdvancedZmanim(
+    val city: IsraeliCity,
+    val saturdayDate: Date,
+    val sofZmanShma: String,     // סוף זמן קריאת שמע (GRA)
+    val sofZmanTfila: String,    // סוף זמן תפילה (GRA)
+    val chatzos: String,         // חצות היום
+    val minchaGedola: String,    // מנחה גדולה
+    val minchaKetana: String,    // מנחה קטנה
+    val plagHamincha: String,    // פלג המנחה
+    val shekia: String           // שקיעה
+)
+
 object ShabbatTimesCalculator {
 
     private const val TAG = "ShabbatTimes"
@@ -101,6 +114,44 @@ object ShabbatTimesCalculator {
             Log.e(TAG, "Failed to compute Shabbat times for ${city.nameEn}", t)
             ShabbatTimes(city = city, candleLighting = "—", havdalah = "—")
         }
+    }
+
+    /**
+     * Returns advanced zmanim for Shabbat day (Saturday) in the given city.
+     * Saturday is derived from the same `nextFriday()` logic + 1 day, so the
+     * result follows the same semantics:
+     *   - Sun–Thu: next Shabbat
+     *   - Fri: tomorrow (the upcoming Shabbat)
+     *   - Sat: today (current Shabbat)
+     */
+    fun computeAdvancedZmanim(city: IsraeliCity): AdvancedZmanim {
+        val saturday = Calendar.getInstance(TIMEZONE).apply {
+            time = nextFriday()
+            add(Calendar.DAY_OF_MONTH, 1)
+        }.time
+
+        val czc = try {
+            val safeElevation = city.elevation.coerceAtLeast(0.0)
+            val location = GeoLocation(
+                city.nameEn, city.latitude, city.longitude, safeElevation, TIMEZONE
+            )
+            ComplexZmanimCalendar(location).apply { calendar.time = saturday }
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to build zmanim calendar for ${city.nameEn}", t)
+            return AdvancedZmanim(city, saturday, "—", "—", "—", "—", "—", "—", "—")
+        }
+
+        return AdvancedZmanim(
+            city = city,
+            saturdayDate = saturday,
+            sofZmanShma = formatTime(czc.sofZmanShmaGRA),
+            sofZmanTfila = formatTime(czc.sofZmanTfilaGRA),
+            chatzos = formatTime(czc.chatzos),
+            minchaGedola = formatTime(czc.minchaGedola),
+            minchaKetana = formatTime(czc.minchaKetana),
+            plagHamincha = formatTime(czc.plagHamincha),
+            shekia = formatTime(czc.sunset)
+        )
     }
 
     /**
