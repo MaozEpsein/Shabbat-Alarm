@@ -120,8 +120,8 @@ No snooze. No dismiss. No lingering notification to swipe away. Just a gentle re
 
 ### Quick install (end users)
 
-> 🔗 **[Download ShabbatAlarm.apk](PLACEHOLDER_DOWNLOAD_URL)**
-> _Debug build · ~20 MB · Android 8.0+_
+> 🔗 **[Download ShabbatAlarm.apk](https://github.com/MaozEpsein/Shabbat-Alarm/releases/latest/download/ShabbatAlarm.apk)**
+> _Debug build · ~10 MB · Android 8.0+_
 
 <details>
 <summary><b>📖 First-time installation walkthrough</b></summary>
